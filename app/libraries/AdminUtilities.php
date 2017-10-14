@@ -5,6 +5,7 @@ use Airavata\Model\Workspace\GatewayApprovalStatus;
 use Airavata\Model\Workspace\Notification;
 use Airavata\Model\Workspace\NotificationPriority;
 use Airavata\Model\Credential\Store\CredentialOwnerType;
+use Airavata\Model\Status\JobState;
 use Illuminate\Support\Facades\Log;
 
 class AdminUtilities
@@ -288,8 +289,20 @@ class AdminUtilities
         $expNum = 0;
         foreach ($experiments as $experiment) {
             //var_dump( $experiment); exit;
-            $expValue = ExperimentUtilities::get_experiment_values($experiment, true);
+			$expValue = ExperimentUtilities::get_experiment_values($experiment, true);
+
+			$jobDetails = ExperimentUtilities::get_job_details($experiment->experimentId);
+			foreach($jobDetails as $index => $jobDetail) {
+				if (isset($jobDetail->jobStatuses)) {
+					$jobDetails[$index]->jobStatuses[0]->jobStateName = JobState::$_name[$jobDetail->jobStatuses[0]->jobState];	
+				}
+				else {
+					$jobDetails[$index]->jobStatuses = [new stdClass()];
+					$jobDetails[$index]->jobStatuses[0]->jobStateName = null;	
+				}	
+			}
             $expContainer[$expNum]['experiment'] = $experiment;
+            $expContainer[$expNum]['jobDetails'] = $jobDetails;
             $expValue["editable"] = false;
             $expContainer[$expNum]['expValue'] = $expValue;
             $expNum++;
